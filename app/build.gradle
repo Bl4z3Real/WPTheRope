@@ -1,0 +1,34 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.cuttherope.game'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.cuttherope.game'
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // firmato con la chiave di debug cosi' l'APK release e' installabile subito
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    // mp3/mp4 non compressi: servono per lo streaming con Range (video e musica)
+    androidResources {
+        noCompress 'mp3', 'mp4'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
