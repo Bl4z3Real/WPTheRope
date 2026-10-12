@@ -2342,3 +2342,14 @@ video::-webkit-media-controls-enclosure,
 video::-webkit-media-controls-panel,
 video::-webkit-media-controls-overlay-play-button,
 video::-webkit-media-controls-start-playback-button{display:none!important;-webkit-appearance:none}
+
+/* ombra morbida attorno allo stage sopra lo sfondo esteso */
+#gameArea{box-shadow:0 0 40px 6px rgba(0,0,0,.35)}
+
+
+/* ---- modalita' verticale 9:16 durante il gioco ---- */
+/* il canvas (384x576) sta al centro dello stage 1024 */
+#c{left:320px;top:0}
+body.pm #gameBtnTray{right:320px}
+body.pm #gameArea{box-shadow:none}
+body.pm #c{box-shadow:0 0 40px 6px rgba(0,0,0,.35)}
