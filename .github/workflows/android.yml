@@ -19,16 +19,15 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Android SDK
-        uses: android-actions/setup-android@v3
+      # L'SDK Android e' gia' installato su ubuntu-latest (ANDROID_HOME).
+      # Accetto solo le licenze, cosi' Gradle puo' scaricare eventuali componenti mancanti.
+      - name: Accetta licenze Android SDK
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-
-      - name: Installa i componenti SDK necessari
-        run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
       - name: Compila APK (debug + release)
         run: gradle assembleDebug assembleRelease --stacktrace
