@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.graphics.Bitmap;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -77,6 +79,19 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 // resta sempre dentro il gioco: blocca i link esterni
                 return !HOST.equals(request.getUrl().getHost());
+            }
+        });
+
+        // niente player/poster di sistema sui video (niente icona play grigia)
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public Bitmap getDefaultVideoPoster() {
+                return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
+            }
+
+            @Override
+            public View getVideoLoadingProgressView() {
+                return new View(MainActivity.this);
             }
         });
 
