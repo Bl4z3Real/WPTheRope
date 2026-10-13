@@ -2344,7 +2344,7 @@ video::-webkit-media-controls-overlay-play-button,
 video::-webkit-media-controls-start-playback-button{display:none!important;-webkit-appearance:none}
 
 /* ombra morbida attorno allo stage sopra lo sfondo esteso */
-#gameArea{box-shadow:0 0 40px 6px rgba(0,0,0,.35)}
+#gameArea{box-shadow:none!important}
 
 
 /* ---- modalita' verticale 9:16 durante il gioco ---- */
@@ -2352,4 +2352,32 @@ video::-webkit-media-controls-start-playback-button{display:none!important;-webk
 #c{left:320px;top:0}
 body.pm #gameBtnTray{right:320px}
 body.pm #gameArea{box-shadow:none}
-body.pm #c{box-shadow:0 0 40px 6px rgba(0,0,0,.35)}
+body.pm #c{box-shadow:none}
+
+body.pm #gameArea{height:var(--ab,576px)!important}
+body.pm #gameContainer{height:var(--ab,576px)!important}
+
+/* ---- schermate verticali (menu, caricamento, livelli, risultati) ---- */
+/* lo sfondo a tutto schermo lo disegna #backdrop: i pannelli non disegnano il proprio */
+body.sm #startBackground,
+body.sm #menuBackground,
+body.sm #levelBackground,
+body.sm #loaderWindow{background-size:0 0!important}
+body.sm #levelCanvas,
+body.sm #shadowCanvas{visibility:hidden}
+body.sm.hidec #c{visibility:hidden}
+body.sm #c{background:transparent!important}
+/* tasti agli angoli: portati dentro la zona centrale (212..812) */
+body.sm .bBtn{left:228px!important}
+body.sm #boxScore,body.sm #levelScore{right:228px!important}
+body.sm #miniOptionsMenu{left:228px!important}
+body.sm #boxNavBack{left:218px!important}
+body.sm #boxNavForward{left:752px!important}
+body.sm #optionSound{left:228px!important}
+body.pm #gameArea{box-shadow:none}
+body.sm #levelPanel{overflow:visible!important}
+body.sm #levelBack{top:585px!important}
+body.sm #levelScore{top:585px!important}
+body.pm #d{height:var(--ab,576px)!important}
+body.pm #shadowPanel,body.pm #shadowCanvas,body.pm #popupWindow{height:var(--ab,576px)!important}
+body.pm #levelMenu{height:var(--ab,576px)!important}
