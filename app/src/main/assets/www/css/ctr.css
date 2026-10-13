@@ -2368,12 +2368,11 @@ body.sm #shadowCanvas{visibility:hidden}
 body.sm.hidec #c{visibility:hidden}
 body.sm #c{background:transparent!important}
 /* tasti agli angoli: portati dentro la zona centrale (212..812) */
-body.sm .bBtn{left:228px!important}
-body.sm #boxScore,body.sm #levelScore{right:228px!important}
-body.sm #miniOptionsMenu{left:228px!important}
-body.sm #boxNavBack{left:218px!important}
-body.sm #boxNavForward{left:752px!important}
-body.sm #optionSound{left:228px!important}
+body.sm .bBtn{left:calc(var(--rx,212px) + 16px)!important}
+body.sm #boxScore,body.sm #levelScore{right:calc(var(--rr,212px) + 16px)!important}
+body.sm #miniOptionsMenu{left:calc(var(--rx,212px) + 16px)!important}
+body.sm #boxNavBack{left:calc(var(--rx,212px) + 4px)!important}
+body.sm #boxNavForward{left:calc(1024px - var(--rr,212px) - 63px)!important}
 body.pm #gameArea{box-shadow:none}
 body.sm #levelPanel{overflow:visible!important}
 body.sm #levelBack{top:585px!important}
