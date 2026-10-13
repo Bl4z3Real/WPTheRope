@@ -21,8 +21,20 @@
   }
 
   function currentMode() {
-    return visible('gameBtnTray') ? 'game' : 'stage';
+    if (visible('gameBtnTray')) return 'game';
+    if (visible('levelResults')) return 'results';
+    if (visible('boxNavForward')) return 'box';
+    if (visible('menuBtnVbox')) return 'menu';
+    return 'stage';
   }
+
+  // zona centrale (x, larghezza) dello stage 1024 usata per ogni schermata in verticale
+  var REGIONS = {
+    menu:    { x: 322, w: 380 },
+    box:     { x: 252, w: 520 },
+    results: { x: 232, w: 560 },
+    stage:   { x: 212, w: 600 }
+  };
 
   function fit() {
     var el = document.getElementById('gameContainer');
@@ -35,9 +47,12 @@
       x = (vw - PORT_W * s) / 2 - PORT_X * s;
       y = (vh - PORT_H * s) / 2;
     } else if (tall) {
-      s = vw / CONT_W;
-      x = (vw - CONT_W * s) / 2 - CONT_X * s;
+      var rg = REGIONS[mode] || REGIONS.stage;
+      s = vw / rg.w;
+      x = -rg.x * s;
       y = (vh - STAGE_H * s) / 2;
+      document.body.style.setProperty('--rx', rg.x + 'px');
+      document.body.style.setProperty('--rr', (STAGE_W - rg.x - rg.w) + 'px');
     } else {
       s = Math.min(vw / STAGE_W, vh / STAGE_H);
       x = (vw - STAGE_W * s) / 2;
