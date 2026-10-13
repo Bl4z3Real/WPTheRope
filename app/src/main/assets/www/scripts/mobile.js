@@ -1,16 +1,15 @@
-/* Adatta il gioco a qualsiasi schermo.
-   - Menu/selezione livelli: stage 1024x576 (orizzontale) scalato per stare nello schermo.
-   - Durante il gioco: modalita' verticale 9:16 (canvas 384x576, centro dello stage).
-   Le barre libere vengono riempite con uno sfondo esteso (continuazione sfocata dei bordi). */
+/* Adatta il gioco a qualsiasi schermo, a tutto schermo e senza bande.
+   - In livello: canvas verticale (384 x altezza in proporzione allo schermo).
+   - Menu, caricamento, selezione livelli, risultati: lo stage 1024x576 viene scalato sulla larghezza
+     del contenuto e lo sfondo dell'immagine copre tutto lo schermo. */
 (function () {
   var STAGE_W = 1024, STAGE_H = 576;
-  var PORT_X = 320, PORT_W = 384;      // zona verticale dentro lo stage
-  var BD_W = 96;                       // risoluzione (bassa) del canvas di sfondo
+  var PORT_X = 320, PORT_W = 384;                 // zona verticale (canvas di gioco) dentro lo stage
+  var PORT_H = window.__CTR_AB || 576;            // altezza del canvas verticale
+  var CONT_X = 212, CONT_W = 600;                 // zona centrale dei menu in verticale
+  var mode = 'stage';                             // 'game' | 'stage'
   var backdrop, bctx, bw = 0, bh = 0;
   var imgCache = {};
-  var RES_X = 212, RES_W = 600;        // schermata risultati (centro dello stage)
-  var mode = 'stage';                  // 'game' | 'results' | 'stage'
-  var portrait = false;
 
   function visible(id) {
     var e = document.getElementById(id);
@@ -22,42 +21,43 @@
   }
 
   function currentMode() {
-    if (visible('gameBtnTray')) return 'game';
-    if (visible('levelResults')) return 'results';
-    return 'stage';
+    return visible('gameBtnTray') ? 'game' : 'stage';
   }
 
   function fit() {
     var el = document.getElementById('gameContainer');
     if (!el) return;
     var vw = window.innerWidth, vh = window.innerHeight;
+    var tall = vw / vh < 0.9;
     var s, x, y;
     if (mode === 'game') {
-      s = Math.min(vw / PORT_W, vh / STAGE_H);
+      s = Math.min(vw / PORT_W, vh / PORT_H);
       x = (vw - PORT_W * s) / 2 - PORT_X * s;
-    } else if (mode === 'results') {
-      s = Math.min(vw / RES_W, vh / STAGE_H);
-      x = (vw - RES_W * s) / 2 - RES_X * s;
+      y = (vh - PORT_H * s) / 2;
+    } else if (tall) {
+      s = vw / CONT_W;
+      x = (vw - CONT_W * s) / 2 - CONT_X * s;
+      y = (vh - STAGE_H * s) / 2;
     } else {
       s = Math.min(vw / STAGE_W, vh / STAGE_H);
       x = (vw - STAGE_W * s) / 2;
+      y = (vh - STAGE_H * s) / 2;
     }
-    y = (vh - STAGE_H * s) / 2;
     el.style.transformOrigin = '0 0';
     el.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px) scale(' + s + ')';
-    portrait = (mode === 'game');
-    document.body.classList.toggle('pm', portrait);
+    document.body.classList.toggle('pm', mode === 'game');
+    document.body.classList.toggle('sm', mode !== 'game' && tall);
+    document.body.classList.toggle('hidec', mode !== 'game' && !visible('startBackground'));
     sizeBackdrop();
   }
 
-  /* ---------- sfondo esteso ---------- */
+  /* ---------- sfondo a tutto schermo (menu, caricamento...) ---------- */
   function ensureBackdrop() {
     if (backdrop) return;
     backdrop = document.createElement('canvas');
     backdrop.id = 'backdrop';
     backdrop.style.cssText =
-      'position:fixed;left:-6%;top:-6%;width:112%;height:112%;z-index:0;pointer-events:none;' +
-      'filter:blur(12px) brightness(.92);';
+      'position:fixed;left:0;top:0;width:100%;height:100%;z-index:0;pointer-events:none;';
     document.body.insertBefore(backdrop, document.body.firstChild);
     bctx = backdrop.getContext('2d');
     var lang = document.getElementById('lang');
@@ -67,9 +67,8 @@
   function sizeBackdrop() {
     ensureBackdrop();
     var vw = window.innerWidth, vh = window.innerHeight;
-    var h = Math.max(8, Math.round(BD_W * vh / vw));
-    if (bw !== BD_W || bh !== h) {
-      bw = BD_W; bh = h;
+    if (bw !== vw || bh !== vh) {
+      bw = vw; bh = vh;
       backdrop.width = bw; backdrop.height = bh;
     }
   }
@@ -86,46 +85,49 @@
   }
 
   function pickSource() {
-    if (!portrait) {
-      var ids = ['startBackground', 'menuBackground', 'levelBackground'];
-      for (var i = 0; i < ids.length; i++) {
-        var e = document.getElementById(ids[i]);
-        if (e) {
-          var im = bgImage(e);
-          if (im) return { src: im, w: im.naturalWidth, h: im.naturalHeight };
-        }
+    var ids = ['loaderWindow', 'startBackground', 'menuBackground'];
+    for (var i = 0; i < ids.length; i++) {
+      var e = document.getElementById(ids[i]);
+      if (e) {
+        var im = bgImage(e);
+        if (im) return im;
       }
     }
-    var c = document.getElementById('c');
-    if (c && c.width) return { src: c, w: c.width, h: c.height };
+    // schermate con sfondo disegnato su canvas (selezione livelli, risultati)
+    if (visible('levelBackground')) {
+      var lc = document.getElementById('levelCanvas');
+      if (lc.width > 10) return lc;
+    }
     return null;
   }
 
+  var lastSrc = null, lastW = 0, lastH = 0, lastMode = '';
   function drawBackdrop() {
     if (!bctx || document.hidden) return;
-    var vw = window.innerWidth;
-    var ref = document.getElementById(portrait ? 'c' : 'gameArea');
-    var r = ref ? ref.getBoundingClientRect() : null;
-    if (!r || !r.width) return;
-    var k = bw / vw;
-    var x0 = r.left * k, y0 = r.top * k, x1 = r.right * k, y1 = r.bottom * k;
-    var s = pickSource();
+    if (mode === 'game') {            // in livello il canvas riempie gia' tutto
+      if (lastMode !== 'game') { bctx.clearRect(0, 0, bw, bh); lastMode = 'game'; lastSrc = null; }
+      return;
+    }
+    lastMode = mode;
+    var im = pickSource();
+    var isCanvas = im && im.tagName === 'CANVAS';
+    if (!isCanvas && im === lastSrc && bw === lastW && bh === lastH) return;   // niente da ridisegnare
+    lastSrc = im; lastW = bw; lastH = bh;
     bctx.fillStyle = '#17110a';
     bctx.fillRect(0, 0, bw, bh);
-    if (!s) return;
-    var sw = s.w, sh = s.h, t = 3;
-    try {
-      bctx.drawImage(s.src, 0, 0, sw, sh, x0, y0, x1 - x0, y1 - y0);
-      if (y0 > 0.5) bctx.drawImage(s.src, 0, 0, sw, t, 0, 0, bw, y0);
-      if (y1 < bh - 0.5) bctx.drawImage(s.src, 0, sh - t, sw, t, 0, y1, bw, bh - y1);
-      if (x0 > 0.5) bctx.drawImage(s.src, 0, 0, t, sh, 0, y0, x0, y1 - y0);
-      if (x1 < bw - 0.5) bctx.drawImage(s.src, sw - t, 0, t, sh, x1, y0, bw - x1, y1 - y0);
-    } catch (e) { /* sorgente non ancora pronta */ }
+    if (!im) return;
+    var sw0 = isCanvas ? im.width : im.naturalWidth, sh0 = isCanvas ? im.height : im.naturalHeight;
+    var k = Math.max(bw / sw0, bh / sh0);
+    var dw = sw0 * k, dh = sh0 * k;
+    bctx.imageSmoothingQuality = 'high';
+    bctx.drawImage(im, (bw - dw) / 2, (bh - dh) / 2, dw, dh);
   }
 
   function loop() {
     var m = currentMode();
     if (m !== mode) { mode = m; fit(); }
+    var hc = mode !== 'game' && !visible('startBackground');
+    if (hc !== document.body.classList.contains('hidec')) document.body.classList.toggle('hidec', hc);
     drawBackdrop();
     setTimeout(function () { window.requestAnimationFrame(loop); }, 90);
   }
@@ -135,8 +137,8 @@
     if (!loop.started) { loop.started = true; loop(); }
   }
 
-  window.addEventListener('resize', fit);
-  window.addEventListener('orientationchange', function () { setTimeout(fit, 150); });
+  window.addEventListener('resize', function () { lastSrc = null; fit(); });
+  window.addEventListener('orientationchange', function () { setTimeout(function () { lastSrc = null; fit(); }, 150); });
   document.addEventListener('DOMContentLoaded', start);
   window.addEventListener('load', start);
   if (document.body) start();
